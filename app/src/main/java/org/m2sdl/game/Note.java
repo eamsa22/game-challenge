@@ -45,11 +45,9 @@ public class Note {
 
     private int getColorForLane(int lane) {
         switch (lane) {
-            case 0: return 0xFFFF0000; // Rouge
-            case 1: return 0xFF00FF00; // Vert
-            case 2: return 0xFF0000FF; // Bleu
-            case 3: return 0xFFFFFF00; // Jaune
-            case 4: return 0xFF00FFFF; // Cyan
+            case 0: return 0xFF00FF00; // Vert
+            case 1: return 0xFFFF0000; // Rouge
+            case 2: return 0xFFFFFF00;
             default: return 0xFFFFFFFF; // Blanc par défaut
         }
     }
