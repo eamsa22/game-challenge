@@ -27,9 +27,9 @@ public class Note {
 
     private int getColorForLane(int lane) {
         switch (lane) {
-            case 0: return 0xFF00FF00; // Green
-            case 1: return 0xFFFF0000; // Red
-            case 2: return 0xFFFFFF00; // Yellow
+            case 0: return 0xFF00FF00;
+            case 1: return 0xFFFF0000;
+            case 2: return 0xFFFFFF00;
             default: return 0xFFFFFFFF;
         }
     }

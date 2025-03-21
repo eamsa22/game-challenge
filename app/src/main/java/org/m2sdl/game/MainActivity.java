@@ -24,7 +24,7 @@ public class MainActivity extends Activity implements SensorEventListener {
     private static final int SHAKE_THRESHOLD = 300;
 
     private MediaPlayer mediaPlayer;
-    private float timeInSong = 0;  // Temps écoulé dans la chanson (en secondes)
+    private float timeInSong = 0;
 
 
     @Override
