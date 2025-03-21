@@ -16,40 +16,22 @@ public class Note {
         this.color = getColorForLane(lane);
     }
 
-    public static void updateGameTime(float deltaTime) {
-        gameTime += deltaTime;
+    public void update(float deltaTime, float speedMultiplier) {
+        y += 5.0f * speedMultiplier;
     }
 
-    public void update(float lightLevel, float level) {
-        float speedMultiplier = MIN_SPEED + ((gameTime / 1000) * (MAX_SPEED - MIN_SPEED));
-
-        speedMultiplier += lightLevel * 0.5f;
-
-        this.y += BASE_SPEED + speedMultiplier;
-    }
-
-    public int getX() {
-        return x;
-    }
-
-    public int getY() {
-        return y;
-    }
-
-    public int getColor() {
-        return color;
-    }
+    public float getX() { return x; }
+    public float getY() { return y; }
+    public int getLane() { return lane; }
+    public int getColor() { return color; }
 
     private int getColorForLane(int lane) {
         switch (lane) {
-            case 0: return 0xFF00FF00;
-            case 1: return 0xFFFF0000;
-            case 2: return 0xFFFFFF00;
+            case 0: return 0xFF00FF00; // Green
+            case 1: return 0xFFFF0000; // Red
+            case 2: return 0xFFFFFF00; // Yellow
             default: return 0xFFFFFFFF;
         }
     }
-
-    public int getLane() {
-        return lane;
-    }
 }
+

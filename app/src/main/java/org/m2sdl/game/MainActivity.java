@@ -34,19 +34,29 @@ public class MainActivity extends Activity implements SensorEventListener {
         this.requestWindowFeature(Window.FEATURE_NO_TITLE);
 
         gameView = new GameView(this);
-        setContentView(gameView); // Afficher GameView
+        setContentView(gameView);
 
         sensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
         if (sensorManager != null) {
             lightSensor = sensorManager.getDefaultSensor(Sensor.TYPE_LIGHT);
             accelerometer = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
         }
+
+        if (accelerometer == null) {
+            Log.e("Sensors", "❌ No accelerometer!");
+        }
+        if (lightSensor == null) {
+            Log.e("Sensors", "❌ No light sensor!");
+        }
     }
 
     @Override
     public void onSensorChanged(SensorEvent event) {
         if (event.sensor.getType() == Sensor.TYPE_LIGHT) {
-            GameView.setLightLevel(event.values[0]);
+            if (gameView != null) {
+                gameView.setLightLevelExternally(event.values[0]);
+            }
+            Log.d("LIGHT", "Light sensor: " + event.values[0]);
         } else if (event.sensor.getType() == Sensor.TYPE_ACCELEROMETER) {
             long currentTime = System.currentTimeMillis();
             if ((currentTime - lastTime) > 100) {
@@ -59,15 +69,8 @@ public class MainActivity extends Activity implements SensorEventListener {
 
                 float speed = Math.abs(x + y + z - lastX - lastY - lastZ) / diffTime * 10000;
 
-                Log.d("Accéléromètre", "X: " + x + " Y: " + y + " Z: " + z + " Speed: " + speed);
-
-                if (speed > SHAKE_THRESHOLD) {
-                    Log.d("Accéléromètre", "🟢 Secousse détectée ! Effet spécial déclenché.");
-
-                    // ✅ Utilisation de gameView pour appeler la méthode
-                    if (gameView != null) {
-                        gameView.triggerSpecialEffect();
-                    }
+                if (speed > SHAKE_THRESHOLD && gameView != null) {
+                    gameView.triggerSpecialEffect();
                 }
 
                 lastX = x;
@@ -77,8 +80,7 @@ public class MainActivity extends Activity implements SensorEventListener {
         }
     }
 
-    @Override
-    public void onAccuracyChanged(Sensor sensor, int accuracy) {}
+    @Override public void onAccuracyChanged(Sensor sensor, int accuracy) {}
 
     @Override
     protected void onResume() {
