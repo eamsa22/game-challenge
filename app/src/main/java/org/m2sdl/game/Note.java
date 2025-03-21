@@ -1,9 +1,13 @@
 package org.m2sdl.game;
 
 public class Note {
-    private float x, y;
-    private int lane;
+
+    private int x, y, lane;
     private int color;
+    private static final int BASE_SPEED = 3;
+    private static final float MAX_SPEED = 20.0f;
+    private static final float MIN_SPEED = 3.0f;
+    private static float gameTime = 0;
 
     public Note(int x, int y, int lane) {
         this.x = x;

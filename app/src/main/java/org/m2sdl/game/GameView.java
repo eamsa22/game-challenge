@@ -2,6 +2,12 @@ package org.m2sdl.game;
 
 import android.content.Context;
 import android.graphics.*;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.graphics.Canvas;
+import android.graphics.Color;
+import android.graphics.Paint;
+import android.media.MediaPlayer;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.*;
@@ -22,6 +28,7 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
     private float ambientLight = 50f;
     private boolean isIncreasing = true;
     public static float noteSpawnRate = 0.01f;
+    private MediaPlayer mediaPlayer;
 
     public GameView(Context context) {
         super(context);
@@ -32,6 +39,7 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
 
         DisplayMetrics metrics = new DisplayMetrics();
         ((WindowManager) context.getSystemService(Context.WINDOW_SERVICE)).getDefaultDisplay().getMetrics(metrics);
+
         int screenHeight = metrics.heightPixels;
 
         notes = new ArrayList<>();
@@ -49,6 +57,10 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
         scorePaint.setFakeBoldText(true);
 
         thread = new GameThread(getHolder(), this);
+
+        mediaPlayer = MediaPlayer.create(context, R.raw.guitar_song);
+        mediaPlayer.setLooping(true);
+        mediaPlayer.start();
     }
 
     public void setLightLevelExternally(float level) {
@@ -90,6 +102,7 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
     }
 
     @Override public void surfaceChanged(SurfaceHolder holder, int format, int width, int height) {}
+
     @Override public void surfaceDestroyed(SurfaceHolder holder) {
         boolean retry = true;
         while (retry) {
@@ -98,6 +111,11 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
                 thread.join();
             } catch (InterruptedException e) { e.printStackTrace(); }
             retry = false;
+        }
+
+        if (mediaPlayer != null) {
+            mediaPlayer.stop();
+            mediaPlayer.release();
         }
     }
 
