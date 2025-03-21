@@ -1,34 +1,53 @@
 package org.m2sdl.game;
 
 import android.app.Activity;
+import android.content.Context;
 import android.os.Bundle;
 import android.view.Window;
 import android.view.WindowManager;
+import android.hardware.Sensor;
+import android.hardware.SensorEvent;
+import android.hardware.SensorEventListener;
+import android.hardware.SensorManager;
 
-import androidx.constraintlayout.widget.ConstraintLayout;
+public class MainActivity extends Activity implements SensorEventListener {
 
-public class MainActivity extends Activity {
+    private SensorManager sensorManager;
+    private Sensor lightSensor;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        // Fullscreen & no title bar
-        getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN);
-        requestWindowFeature(Window.FEATURE_NO_TITLE);
+        getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN,  WindowManager.LayoutParams.FLAG_FULLSCREEN);
+        this.requestWindowFeature(Window.FEATURE_NO_TITLE);
+        setContentView(new GameView(this));
 
-        // Create ConstraintLayout programmatically
-        ConstraintLayout layout = new ConstraintLayout(this);
-        layout.setLayoutParams(new ConstraintLayout.LayoutParams(
-                ConstraintLayout.LayoutParams.MATCH_PARENT,
-                ConstraintLayout.LayoutParams.MATCH_PARENT
-        ));
+        // Initialiser le capteur de luminosité
+        sensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
+        lightSensor = sensorManager.getDefaultSensor(Sensor.TYPE_LIGHT);
+    }
 
-        // Create and add GameView
-        GameView gameView = new GameView(this, layout);
-        layout.addView(gameView);
+    @Override
+    public void onSensorChanged(SensorEvent event) {
+        if (event.sensor.getType() == Sensor.TYPE_LIGHT) {
+            // Mettre à jour la luminosité pour affecter la vitesse des notes
+            GameView.setLightLevel(event.values[0]); // Passer la valeur de luminosité à la vue de jeu
+        }
+    }
 
-        // Set the layout as the content view
-        setContentView(layout);
+    @Override
+    public void onAccuracyChanged(Sensor sensor, int accuracy) {}
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        sensorManager.registerListener(this, lightSensor, SensorManager.SENSOR_DELAY_UI);
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        sensorManager.unregisterListener(this);
     }
 }

@@ -1,81 +1,69 @@
 package org.m2sdl.game;
 
 import android.content.Context;
-import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
-import android.graphics.drawable.BitmapDrawable;
-import android.view.MotionEvent;
+import android.util.DisplayMetrics;
+import android.util.Log;
+import android.view.Display;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
-import android.view.View;
-import android.widget.TextView;
-import androidx.constraintlayout.widget.ConstraintLayout;
-import androidx.constraintlayout.widget.ConstraintLayout.LayoutParams;
+import android.view.WindowManager;
+
+import java.util.ArrayList;
 
 public class GameView extends SurfaceView implements SurfaceHolder.Callback {
+
     private GameThread thread;
-    private int x = 0;
-    private int y;
-    private Bitmap background;
+    private ArrayList<Note> notes; // Liste des notes à afficher
+    private int[] lanes; // Positions des pistes
+    private Paint paint;
+    private Button[] buttons; // Liste des boutons en bas de l'écran
 
-    private TextView scoreText;
-    private ConstraintLayout parentLayout;
+    private Bitmap background; // Déclaration de l'image de fond
+    private static float lightLevel = 0.5f; // Niveau de luminosité initial
 
-    private Button[] buttons;
-    private int[] lanes = {225, 400, 585}; // X positions
-    private int[] laneColors = {Color.GREEN, Color.RED, Color.YELLOW};
-
-    public GameView(Context context, ConstraintLayout parentLayout) {
+    public GameView(Context context) {
         super(context);
         getHolder().addCallback(this);
-        setZOrderOnTop(true);
         setFocusable(true);
 
-        this.parentLayout = parentLayout;
+        // Charger l'image de fond
+        background = BitmapFactory.decodeResource(getResources(), R.drawable.img);  // Assurez-vous d'avoir cette image dans les ressources
 
-        background = BitmapFactory.decodeResource(getResources(), R.drawable.guitarhero);
+        // Obtenir les dimensions de l'écran
+        WindowManager wm = (WindowManager) context.getSystemService(Context.WINDOW_SERVICE);
+        Display display = wm.getDefaultDisplay();
+        DisplayMetrics metrics = new DisplayMetrics();
+        display.getMetrics(metrics);
 
-        SharedPreferences sharedPref = context.getSharedPreferences("GamePrefs", Context.MODE_PRIVATE);
-        y = sharedPref.getInt("valeur_y", 0);
-        y = (y + 100) % 400;
-        SharedPreferences.Editor editor = sharedPref.edit();
-        editor.putInt("valeur_y", y);
-        editor.apply();
+        int screenWidth = metrics.widthPixels;  // Largeur de l'écran
+        int screenHeight = metrics.heightPixels; // Hauteur de l'écran
 
-        setupUI(context);
-        thread = new GameThread(getHolder(), this);
-    }
+        // Afficher les dimensions de l'écran
+        Log.d("GameView", "Screen Width: " + screenWidth);
+        Log.d("GameView", "Screen Height: " + screenHeight);
 
-    private void setupUI(Context context) {
-        BitmapDrawable drawable = new BitmapDrawable(getResources(), background);
-        parentLayout.setBackground(drawable);
-
-        scoreText = new TextView(context);
-        scoreText.setText("Score: 0");
-        scoreText.setTextSize(24);
-        scoreText.setTextColor(Color.WHITE);
-        scoreText.setId(View.generateViewId());
-        scoreText.setElevation(10f);
-
-        LayoutParams scoreParams = new LayoutParams(
-                LayoutParams.WRAP_CONTENT,
-                LayoutParams.WRAP_CONTENT
-        );
-        scoreParams.leftToLeft = ConstraintLayout.LayoutParams.PARENT_ID;
-        scoreParams.topToTop = ConstraintLayout.LayoutParams.PARENT_ID;
-        scoreParams.setMargins(40, 32, 0, 0);
-        scoreText.setLayoutParams(scoreParams);
-        parentLayout.addView(scoreText);
-
-        int screenHeight = getResources().getDisplayMetrics().heightPixels;
+        notes = new ArrayList<>();
+        lanes = new int[]{225, 400, 585}; // 5 pistes
         buttons = new Button[lanes.length];
+        int[] laneColors = {
+                Color.GREEN,    // Couleur pour la lane 1
+                Color.RED,  // Couleur pour la lane 2
+                Color.YELLOW    // Couleur pour la lane 3
+        };
+
         for (int i = 0; i < lanes.length; i++) {
-            buttons[i] = new Button(lanes[i], screenHeight - 150, laneColors[i]);
+            buttons[i] = new Button(lanes[i], screenHeight - 120, laneColors[i]);
         }
+
+        paint = new Paint();
+        paint.setColor(Color.RED);
+
+        thread = new GameThread(getHolder(), this);
     }
 
     @Override
@@ -101,81 +89,85 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
         }
     }
 
+    public static void setLightLevel(float level) {
+        lightLevel = level; // Mettre à jour la luminosité
+    }
+
     @Override
     public void draw(Canvas canvas) {
         super.draw(canvas);
         if (canvas != null) {
-            canvas.drawBitmap(
-                    Bitmap.createScaledBitmap(background, getWidth(), getHeight(), false),
-                    0, 0, null
-            );
+            Log.d("GameView", "Dessin en cours...");
 
-            Paint paint = new Paint();
+            // Dessiner le fond d'écran redimensionné
+            canvas.drawBitmap(Bitmap.createScaledBitmap(background, getWidth(), getHeight(), false), 0, 0, null);
 
-            // Moving red square
-            paint.setColor(Color.RED);
-            canvas.drawRect(x, y, x + 100, y + 100, paint);
+            // Dessiner les notes
+            for (Note note : notes) {
+                paint.setColor(note.getColor()); // Définir la couleur de la note
+                canvas.drawCircle(note.getX(), note.getY(), 25, paint); // Dessiner un cercle (note)
+            }
 
-            // Draw buttons
-            for (Button b : buttons) {
-                b.draw(canvas, paint);
+            // Dessiner les boutons en bas
+            for (Button button : buttons) {
+                button.draw(canvas, paint); // Dessiner chaque bouton
+                Log.d("GameView", "Button drawn at: (" + button.getX() + ", " + button.getY() + ")");
+            }
+
+            // Afficher les lignes de guitare
+           /* paint.setColor(Color.argb(128, 0, 0, 0));
+            for (int lane : lanes) {
+                canvas.drawLine(lane, 0, lane, getHeight(), paint); // Dessiner les lignes
+            }*/
+        }
+    }
+
+    public void update(float deltaTime) {
+        // Mettre à jour les positions des notes en fonction du deltaTime
+        for (Note note : notes) {
+            note.update(deltaTime, lightLevel); // Passer le deltaTime à la méthode update de Note
+        }
+
+        // Générer de nouvelles notes avec une probabilité de 1% à chaque mise à jour
+        if (Math.random() < 0.01) {
+            int lane = (int) (Math.random() * lanes.length);
+            notes.add(new Note(lanes[lane], 0, lane));
+        }
+
+        // Enlever les notes qui sont sorties de l'écran
+        ArrayList<Note> toRemove = new ArrayList<>();
+        for (Note note : notes) {
+            if (note.getY() > getHeight()) {
+                toRemove.add(note);
             }
         }
+        notes.removeAll(toRemove);
     }
 
-    public void update() {
-        x = (x + 5) % getWidth();
-    }
+    public class Button {
+        private int x, y; // Position du bouton
+        private int radius = 55; // Rayon du bouton circulaire
+        private int color; // Couleur du bouton
 
-    @Override
-    public boolean onTouchEvent(MotionEvent event) {
-        float touchX = event.getX();
-        float touchY = event.getY();
-
-        switch (event.getAction()) {
-            case MotionEvent.ACTION_DOWN:
-            case MotionEvent.ACTION_MOVE:
-                for (Button b : buttons) {
-                    b.setPressed(b.contains(touchX, touchY));
-                }
-                break;
-            case MotionEvent.ACTION_UP:
-            case MotionEvent.ACTION_CANCEL:
-                for (Button b : buttons) {
-                    b.setPressed(false);
-                }
-                break;
-        }
-
-        return true;
-    }
-
-    // Custom circle button
-    private class Button {
-        private int x, y;
-        private int radius = 60;
-        private int activeColor;
-        private boolean isPressed = false;
-
-        public Button(int x, int y, int activeColor) {
+        public Button(int x, int y, int color) {
             this.x = x;
             this.y = y;
-            this.activeColor = activeColor;
+            this.color = color; // Affecter la couleur
         }
 
         public void draw(Canvas canvas, Paint paint) {
-            paint.setColor(isPressed ? activeColor : Color.argb(0, 0, 0, 0));
-            canvas.drawCircle(x, y, radius, paint);
+            paint.setColor(color); // Appliquer la couleur du bouton
+            // Dessiner un cercle pour le bouton
+            canvas.drawCircle(x, y, radius, paint); // Dessiner un cercle à la position (x, y) avec le rayon spécifié
         }
 
-        public void setPressed(boolean pressed) {
-            isPressed = pressed;
+        public int getX() {
+            return x;
         }
 
-        public boolean contains(float touchX, float touchY) {
-            float dx = touchX - x;
-            float dy = touchY - y;
-            return dx * dx + dy * dy <= radius * radius;
+        public int getY() {
+            return y;
         }
     }
+
 }
