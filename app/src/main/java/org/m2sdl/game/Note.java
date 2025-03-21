@@ -17,18 +17,15 @@ public class Note {
     }
 
     public static void updateGameTime(float deltaTime) {
-        gameTime += deltaTime; // Augmenter le temps de jeu pour suivre la progression
+        gameTime += deltaTime;
     }
 
     public void update(float lightLevel, float level) {
-        // La vitesse des notes augmente progressivement en fonction du temps de jeu
-        float speedMultiplier = MIN_SPEED + ((gameTime / 1000) * (MAX_SPEED - MIN_SPEED)); // Augmentation progressive de la vitesse
+        float speedMultiplier = MIN_SPEED + ((gameTime / 1000) * (MAX_SPEED - MIN_SPEED));
 
-        // Appliquer un ajustement très léger en fonction de la luminosité
-        speedMultiplier += lightLevel * 0.5f; // Facteur de luminosité faible pour ajuster la vitesse
+        speedMultiplier += lightLevel * 0.5f;
 
-        // Calculer la nouvelle position
-        this.y += BASE_SPEED + speedMultiplier; // Ajouter la vitesse ajustée
+        this.y += BASE_SPEED + speedMultiplier;
     }
 
     public int getX() {
@@ -45,10 +42,10 @@ public class Note {
 
     private int getColorForLane(int lane) {
         switch (lane) {
-            case 0: return 0xFF00FF00; // Vert
-            case 1: return 0xFFFF0000; // Rouge
+            case 0: return 0xFF00FF00;
+            case 1: return 0xFFFF0000;
             case 2: return 0xFFFFFF00;
-            default: return 0xFFFFFFFF; // Blanc par défaut
+            default: return 0xFFFFFFFF;
         }
     }
 

@@ -17,10 +17,10 @@ public class MainActivity extends Activity implements SensorEventListener {
     private SensorManager sensorManager;
     private Sensor lightSensor;
     private Sensor accelerometer;
-    private GameView gameView; // ✅ Stocke l'instance de GameView
+    private GameView gameView;
     private float lastX, lastY, lastZ;
     private long lastTime;
-    private static final int SHAKE_THRESHOLD = 300; // Seuil réduit pour test
+    private static final int SHAKE_THRESHOLD = 300;
 
     private MediaPlayer mediaPlayer;
     private float timeInSong = 0;  // Temps écoulé dans la chanson (en secondes)
@@ -30,15 +30,12 @@ public class MainActivity extends Activity implements SensorEventListener {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        // Configuration de l'affichage en plein écran
         getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN);
         this.requestWindowFeature(Window.FEATURE_NO_TITLE);
 
-        // ✅ Créer une instance de GameView
         gameView = new GameView(this);
         setContentView(gameView); // Afficher GameView
 
-        // Initialisation des capteurs
         sensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
         if (sensorManager != null) {
             lightSensor = sensorManager.getDefaultSensor(Sensor.TYPE_LIGHT);
