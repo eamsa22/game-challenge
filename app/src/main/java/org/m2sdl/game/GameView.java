@@ -6,6 +6,7 @@ import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
+import android.media.MediaPlayer;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.Display;
@@ -32,6 +33,7 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
     private static final int HIT_WINDOW = 200;
     private static final int NOTE_START_Y = 700;
 
+    private MediaPlayer mediaPlayer;
 
     public GameView(Context context) {
         super(context);
@@ -45,11 +47,7 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
         DisplayMetrics metrics = new DisplayMetrics();
         display.getMetrics(metrics);
 
-        int screenWidth = metrics.widthPixels;
         int screenHeight = metrics.heightPixels;
-
-        Log.d("GameView", "Screen Width: " + screenWidth);
-        Log.d("GameView", "Screen Height: " + screenHeight);
 
         notes = new ArrayList<>();
         lanes = new int[]{225, 400, 585};
@@ -73,6 +71,10 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
         scorePaint.setFakeBoldText(true);
 
         thread = new GameThread(getHolder(), this);
+
+        mediaPlayer = MediaPlayer.create(context, R.raw.guitar_song);
+        mediaPlayer.setLooping(true);
+        mediaPlayer.start();
     }
 
     public void triggerSpecialEffect() {
@@ -81,7 +83,6 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
         } else {
             noteSpawnRate = 0.01f;
         }
-
 
         isIncreasing = !isIncreasing;
         flashScreen();
@@ -108,6 +109,11 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
             }
             retry = false;
         }
+
+        if (mediaPlayer != null) {
+            mediaPlayer.stop();
+            mediaPlayer.release();
+        }
     }
 
     public static void setLightLevel(float level) {
@@ -129,7 +135,6 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
                 button.draw(canvas, paint);
             }
 
-            // Draw score
             canvas.drawText("Score: " + score, 50, 80, scorePaint);
         }
     }
@@ -138,7 +143,6 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
         for (Note note : notes) {
             note.update(deltaTime, lightLevel);
         }
-
 
         if (Math.random() < noteSpawnRate) {
             int lane = (int) (Math.random() * lanes.length);
@@ -188,8 +192,6 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
                 if (!hit) {
                     score -= 25;
                 }
-
-                // Optional: remove hit note
                 if (noteToRemove != null) {
                     notes.remove(noteToRemove);
                 }
@@ -207,7 +209,7 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
         new Thread(() -> {
             Paint flashPaint = new Paint();
             flashPaint.setColor(Color.WHITE);
-            flashPaint.setAlpha(150); // Semi-transparent
+            flashPaint.setAlpha(150);
 
             Canvas canvas = getHolder().lockCanvas();
             if (canvas != null) {

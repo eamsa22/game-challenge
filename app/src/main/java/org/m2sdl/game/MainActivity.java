@@ -10,6 +10,7 @@ import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
+import android.media.MediaPlayer;
 
 public class MainActivity extends Activity implements SensorEventListener {
 
@@ -20,6 +21,10 @@ public class MainActivity extends Activity implements SensorEventListener {
     private float lastX, lastY, lastZ;
     private long lastTime;
     private static final int SHAKE_THRESHOLD = 300; // Seuil réduit pour test
+
+    private MediaPlayer mediaPlayer;
+    private float timeInSong = 0;  // Temps écoulé dans la chanson (en secondes)
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -38,16 +43,6 @@ public class MainActivity extends Activity implements SensorEventListener {
         if (sensorManager != null) {
             lightSensor = sensorManager.getDefaultSensor(Sensor.TYPE_LIGHT);
             accelerometer = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
-        }
-
-        // Vérification des capteurs
-        if (accelerometer == null) {
-            Log.e("Capteurs", "❌ Aucun accéléromètre détecté !");
-        } else {
-            Log.d("Capteurs", "✅ Accéléromètre détecté !");
-        }
-        if (lightSensor == null) {
-            Log.e("Capteurs", "❌ Aucun capteur de luminosité détecté !");
         }
     }
 
