@@ -1,3 +1,5 @@
 <resources>
     <string name="app_name">game-challenge</string>
+    <string name="welcome_to_guitare_zero">Welcome to Guitare Zero</string>
+    <string name="start">Start</string>
 </resources>
