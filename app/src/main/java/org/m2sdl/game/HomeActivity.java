@@ -1,6 +1,8 @@
 package org.m2sdl.game;
 
+import android.content.Intent;
 import android.os.Bundle;
+import android.view.View;
 
 import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
@@ -21,4 +23,11 @@ public class HomeActivity extends AppCompatActivity {
             return insets;
         });
     }
+
+    public void startGame(View view) {
+        Intent intent = new Intent(HomeActivity.this, MainActivity.class);
+        startActivity(intent);
+        finish();
+    }
+
 }

@@ -25,5 +25,6 @@
         android:textColor="@android:color/white"
         android:layout_below="@id/titleText"
         android:layout_centerHorizontal="true"
-        android:layout_marginTop="50dp" />
+        android:layout_marginTop="50dp"
+        android:onClick="startGame"/>
 </RelativeLayout>
