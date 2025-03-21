@@ -19,43 +19,43 @@ import java.util.ArrayList;
 public class GameView extends SurfaceView implements SurfaceHolder.Callback {
 
     private GameThread thread;
-    private ArrayList<Note> notes; // Liste des notes à afficher
-    private int[] lanes; // Positions des pistes
+    private ArrayList<Note> notes;
+    private int[] lanes;
     private Paint paint;
-    private Button[] buttons; // Liste des boutons en bas de l'écran
+    private Button[] buttons;
 
-    private Bitmap background; // Déclaration de l'image de fond
-    private int score=0;
-    private static float lightLevel = 0.5f; // Niveau de luminosité initial
+    private Bitmap background;
+    private int score = 0;
+    private static float lightLevel = 0.5f;
+    public static float noteSpawnRate = 0.01f;
+    private boolean isIncreasing = true;
+
 
     public GameView(Context context) {
         super(context);
         getHolder().addCallback(this);
         setFocusable(true);
 
-        // Charger l'image de fond
-        background = BitmapFactory.decodeResource(getResources(), R.drawable.img);  // Assurez-vous d'avoir cette image dans les ressources
+        background = BitmapFactory.decodeResource(getResources(), R.drawable.img);
 
-        // Obtenir les dimensions de l'écran
         WindowManager wm = (WindowManager) context.getSystemService(Context.WINDOW_SERVICE);
         Display display = wm.getDefaultDisplay();
         DisplayMetrics metrics = new DisplayMetrics();
         display.getMetrics(metrics);
 
-        int screenWidth = metrics.widthPixels;  // Largeur de l'écran
-        int screenHeight = metrics.heightPixels; // Hauteur de l'écran
+        int screenWidth = metrics.widthPixels;
+        int screenHeight = metrics.heightPixels;
 
-        // Afficher les dimensions de l'écran
         Log.d("GameView", "Screen Width: " + screenWidth);
         Log.d("GameView", "Screen Height: " + screenHeight);
 
         notes = new ArrayList<>();
-        lanes = new int[]{225, 400, 585}; // 5 pistes
+        lanes = new int[]{225, 400, 585};
         buttons = new Button[lanes.length];
         int[] laneColors = {
-                Color.GREEN,    // Couleur pour la lane 1
-                Color.RED,  // Couleur pour la lane 2
-                Color.YELLOW    // Couleur pour la lane 3
+                Color.GREEN,
+                Color.RED,
+                Color.YELLOW
         };
 
         for (int i = 0; i < lanes.length; i++) {
@@ -66,6 +66,18 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
         paint.setColor(Color.RED);
 
         thread = new GameThread(getHolder(), this);
+    }
+
+    public void triggerSpecialEffect() {
+        if (isIncreasing) {
+            noteSpawnRate = 0.1f;
+        } else {
+            noteSpawnRate = 0.01f;
+        }
+
+
+        isIncreasing = !isIncreasing;
+        flashScreen();
     }
 
     @Override
@@ -92,51 +104,37 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
     }
 
     public static void setLightLevel(float level) {
-        lightLevel = level; // Mettre à jour la luminosité
+        lightLevel = level;
     }
 
     @Override
     public void draw(Canvas canvas) {
         super.draw(canvas);
         if (canvas != null) {
-            //Log.d("GameView", "Dessin en cours...");
-
-            // Dessiner le fond d'écran redimensionné
             canvas.drawBitmap(Bitmap.createScaledBitmap(background, getWidth(), getHeight(), false), 0, 0, null);
 
-            // Dessiner les notes
             for (Note note : notes) {
-                paint.setColor(note.getColor()); // Définir la couleur de la note
-                canvas.drawCircle(note.getX(), note.getY(), 25, paint); // Dessiner un cercle (note)
+                paint.setColor(note.getColor());
+                canvas.drawCircle(note.getX(), note.getY(), 25, paint);
             }
 
-            // Dessiner les boutons en bas
             for (Button button : buttons) {
-                button.draw(canvas, paint); // Dessiner chaque bouton
-                //Log.d("GameView", "Button drawn at: (" + button.getX() + ", " + button.getY() + ")");
+                button.draw(canvas, paint);
             }
-
-            // Afficher les lignes de guitare
-           /* paint.setColor(Color.argb(128, 0, 0, 0));
-            for (int lane : lanes) {
-                canvas.drawLine(lane, 0, lane, getHeight(), paint); // Dessiner les lignes
-            }*/
         }
     }
 
     public void update(float deltaTime) {
-        // Mettre à jour les positions des notes en fonction du deltaTime
         for (Note note : notes) {
-            note.update(deltaTime, lightLevel); // Passer le deltaTime à la méthode update de Note
+            note.update(deltaTime, lightLevel);
         }
 
-        // Générer de nouvelles notes avec une probabilité de 1% à chaque mise à jour
-        if (Math.random() < 0.01) {
+
+        if (Math.random() < noteSpawnRate) {
             int lane = (int) (Math.random() * lanes.length);
             notes.add(new Note(lanes[lane], 0, lane));
         }
 
-        // Enlever les notes qui sont sorties de l'écran
         ArrayList<Note> toRemove = new ArrayList<>();
         for (Note note : notes) {
             if (note.getY() > getHeight()) {
@@ -145,31 +143,25 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
         }
         notes.removeAll(toRemove);
     }
+
     @Override
     public boolean onTouchEvent(MotionEvent event) {
-
         if (event.getAction() == MotionEvent.ACTION_DOWN) {
             int touchX = (int) event.getX();
             int touchY = (int) event.getY();
             Log.d("GameView", "checkClick called at (" + touchX + ", " + touchY + ")");
-
             checkClick(touchX, touchY);
         }
         return true;
     }
+
     public void checkClick(int x, int y) {
         for (int i = 0; i < buttons.length; i++) {
             Button button = buttons[i];
-            // Vérifier si le clic est sur le bouton
             if (isClickOnButton(x, y, button)) {
-                // Vérifier si la note est au-dessus du bouton au moment du clic
                 for (Note note : notes) {
-                    if (note.getLane() == i && note.getY() <= button.getY()  ) {
-                        // Ajout d'un bonus
-                        Log.e("y button","y: "+button.getY());
-                        Log.e("y note","y: "+note.getY());
+                    if (note.getLane() == i && note.getY() <= button.getY()) {
                         if (note.getY() >= button.getY() - 100 && note.getY() <= button.getY() + 100) {
-                            Log.e("score","score "+this.score);
                             this.score += 100; // Bonus
                         }
                     }
@@ -177,28 +169,49 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
             }
         }
     }
+
     private boolean isClickOnButton(int x, int y, Button button) {
-
-
         int dx = x - button.getX();
         int dy = y - button.getY();
         return (dx * dx + dy * dy <= button.getRadius() * button.getRadius());
     }
+
+    private void flashScreen() {
+        new Thread(() -> {
+            Paint flashPaint = new Paint();
+            flashPaint.setColor(Color.WHITE);
+            flashPaint.setAlpha(150); // Semi-transparent
+
+            Canvas canvas = getHolder().lockCanvas();
+            if (canvas != null) {
+                canvas.drawRect(0, 0, canvas.getWidth(), canvas.getHeight(), flashPaint);
+                getHolder().unlockCanvasAndPost(canvas);
+            }
+
+            try { Thread.sleep(100); } catch (InterruptedException ignored) {}
+
+            Canvas normalCanvas = getHolder().lockCanvas();
+            if (normalCanvas != null) {
+                draw(normalCanvas);
+                getHolder().unlockCanvasAndPost(normalCanvas);
+            }
+        }).start();
+    }
+
     public class Button {
-        private int x, y; // Position du bouton
-        private int radius = 55; // Rayon du bouton circulaire
-        private int color; // Couleur du bouton
+        private int x, y;
+        private int radius = 55;
+        private int color;
 
         public Button(int x, int y, int color) {
             this.x = x;
             this.y = y;
-            this.color = color; // Affecter la couleur
+            this.color = color;
         }
 
         public void draw(Canvas canvas, Paint paint) {
-            paint.setColor(color); // Appliquer la couleur du bouton
-            // Dessiner un cercle pour le bouton
-            canvas.drawCircle(x, y, radius, paint); // Dessiner un cercle à la position (x, y) avec le rayon spécifié
+            paint.setColor(color);
+            canvas.drawCircle(x, y, radius, paint);
         }
 
         public int getX() {
@@ -217,5 +230,4 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
             this.radius = radius;
         }
     }
-
 }
