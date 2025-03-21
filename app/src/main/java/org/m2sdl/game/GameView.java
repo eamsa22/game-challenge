@@ -23,12 +23,14 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
     private int[] lanes;
     private Paint paint;
     private Button[] buttons;
-
+    private Paint scorePaint;
     private Bitmap background;
     private int score = 0;
     private static float lightLevel = 0.5f;
     public static float noteSpawnRate = 0.01f;
     private boolean isIncreasing = true;
+    private static final int HIT_WINDOW = 200;
+    private static final int NOTE_START_Y = 700;
 
 
     public GameView(Context context) {
@@ -64,6 +66,11 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
 
         paint = new Paint();
         paint.setColor(Color.RED);
+
+        scorePaint = new Paint();
+        scorePaint.setColor(Color.WHITE);
+        scorePaint.setTextSize(30);
+        scorePaint.setFakeBoldText(true);
 
         thread = new GameThread(getHolder(), this);
     }
@@ -121,6 +128,9 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
             for (Button button : buttons) {
                 button.draw(canvas, paint);
             }
+
+            // Draw score
+            canvas.drawText("Score: " + score, 50, 80, scorePaint);
         }
     }
 
@@ -132,7 +142,7 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
 
         if (Math.random() < noteSpawnRate) {
             int lane = (int) (Math.random() * lanes.length);
-            notes.add(new Note(lanes[lane], 0, lane));
+            notes.add(new Note(lanes[lane], NOTE_START_Y, lane));
         }
 
         ArrayList<Note> toRemove = new ArrayList<>();
@@ -159,12 +169,29 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
         for (int i = 0; i < buttons.length; i++) {
             Button button = buttons[i];
             if (isClickOnButton(x, y, button)) {
+                boolean hit = false;
+                Note noteToRemove = null;
+
                 for (Note note : notes) {
-                    if (note.getLane() == i && note.getY() <= button.getY()) {
-                        if (note.getY() >= button.getY() - 100 && note.getY() <= button.getY() + 100) {
-                            this.score += 100; // Bonus
+                    if (note.getLane() == i) {
+                        float dy = Math.abs(note.getY() - button.getY());
+
+                        if (dy <= HIT_WINDOW) {
+                            score += 100;
+                            hit = true;
+                            noteToRemove = note;
+                            break;
                         }
                     }
+                }
+
+                if (!hit) {
+                    score -= 25;
+                }
+
+                // Optional: remove hit note
+                if (noteToRemove != null) {
+                    notes.remove(noteToRemove);
                 }
             }
         }
@@ -214,20 +241,9 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
             canvas.drawCircle(x, y, radius, paint);
         }
 
-        public int getX() {
-            return x;
-        }
-
-        public int getY() {
-            return y;
-        }
-
-        public int getRadius() {
-            return radius;
-        }
-
-        public void setRadius(int radius) {
-            this.radius = radius;
-        }
+        public int getX() { return x; }
+        public int getY() { return y; }
+        public int getRadius() { return radius; }
+        public void setRadius(int radius) { this.radius = radius; }
     }
 }
