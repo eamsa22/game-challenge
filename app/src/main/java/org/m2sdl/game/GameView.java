@@ -9,6 +9,7 @@ import android.graphics.Paint;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.Display;
+import android.view.MotionEvent;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 import android.view.WindowManager;
@@ -24,6 +25,7 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
     private Button[] buttons; // Liste des boutons en bas de l'écran
 
     private Bitmap background; // Déclaration de l'image de fond
+    private int score=0;
     private static float lightLevel = 0.5f; // Niveau de luminosité initial
 
     public GameView(Context context) {
@@ -97,7 +99,7 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
     public void draw(Canvas canvas) {
         super.draw(canvas);
         if (canvas != null) {
-            Log.d("GameView", "Dessin en cours...");
+            //Log.d("GameView", "Dessin en cours...");
 
             // Dessiner le fond d'écran redimensionné
             canvas.drawBitmap(Bitmap.createScaledBitmap(background, getWidth(), getHeight(), false), 0, 0, null);
@@ -111,7 +113,7 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
             // Dessiner les boutons en bas
             for (Button button : buttons) {
                 button.draw(canvas, paint); // Dessiner chaque bouton
-                Log.d("GameView", "Button drawn at: (" + button.getX() + ", " + button.getY() + ")");
+                //Log.d("GameView", "Button drawn at: (" + button.getX() + ", " + button.getY() + ")");
             }
 
             // Afficher les lignes de guitare
@@ -143,7 +145,45 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
         }
         notes.removeAll(toRemove);
     }
+    @Override
+    public boolean onTouchEvent(MotionEvent event) {
 
+        if (event.getAction() == MotionEvent.ACTION_DOWN) {
+            int touchX = (int) event.getX();
+            int touchY = (int) event.getY();
+            Log.d("GameView", "checkClick called at (" + touchX + ", " + touchY + ")");
+
+            checkClick(touchX, touchY);
+        }
+        return true;
+    }
+    public void checkClick(int x, int y) {
+        for (int i = 0; i < buttons.length; i++) {
+            Button button = buttons[i];
+            // Vérifier si le clic est sur le bouton
+            if (isClickOnButton(x, y, button)) {
+                // Vérifier si la note est au-dessus du bouton au moment du clic
+                for (Note note : notes) {
+                    if (note.getLane() == i && note.getY() <= button.getY()  ) {
+                        // Ajout d'un bonus
+                        Log.e("y button","y: "+button.getY());
+                        Log.e("y note","y: "+note.getY());
+                        if (note.getY() >= button.getY() - 100 && note.getY() <= button.getY() + 100) {
+                            Log.e("score","score "+this.score);
+                            this.score += 100; // Bonus
+                        }
+                    }
+                }
+            }
+        }
+    }
+    private boolean isClickOnButton(int x, int y, Button button) {
+
+
+        int dx = x - button.getX();
+        int dy = y - button.getY();
+        return (dx * dx + dy * dy <= button.getRadius() * button.getRadius());
+    }
     public class Button {
         private int x, y; // Position du bouton
         private int radius = 55; // Rayon du bouton circulaire
@@ -167,6 +207,14 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
 
         public int getY() {
             return y;
+        }
+
+        public int getRadius() {
+            return radius;
+        }
+
+        public void setRadius(int radius) {
+            this.radius = radius;
         }
     }
 

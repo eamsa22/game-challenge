@@ -51,4 +51,8 @@ public class Note {
             default: return 0xFFFFFFFF; // Blanc par défaut
         }
     }
+
+    public int getLane() {
+        return lane;
+    }
 }
